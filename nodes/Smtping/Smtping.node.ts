@@ -1,5 +1,6 @@
 import type {
 	IDataObject,
+	JsonObject,
 	IExecuteFunctions,
 	IHttpRequestMethods,
 	IHttpRequestOptions,
@@ -7,7 +8,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError, sleep } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError, sleep } from 'n8n-workflow';
 
 const SAFE = ['valid', 'alias'];
 const AVOID = ['invalid', 'spamtrap', 'disposable', 'blacklisted', 'complainer', 'spambot', 'inbox_full'];
@@ -22,14 +23,15 @@ export class Smtping implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'SMTPing',
 		name: 'smtping',
-		icon: 'file:smtping.svg',
+		icon: { light: 'file:smtping.svg', dark: 'file:smtping.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description: 'Verify email addresses with SMTPing',
 		defaults: { name: 'SMTPing' },
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
+		usableAsTool: true,
 		credentials: [{ name: 'smtpingApi', required: true }],
 		properties: [
 			{
@@ -206,13 +208,13 @@ export class Smtping implements INodeType {
 				url: baseUrl + path,
 				json: true,
 				timeout: 60000,
-				headers: { Accept: 'application/json', 'User-Agent': 'n8n-nodes-smtping/0.1.0' },
+				headers: { Accept: 'application/json', 'User-Agent': 'n8n-nodes-smtping/0.1.2' },
 			};
 			if (body) options.body = body;
 			try {
 				return await this.helpers.httpRequestWithAuthentication.call(this, 'smtpingApi', options);
 			} catch (error) {
-				throw new NodeApiError(this.getNode(), error as any, { itemIndex });
+				throw new NodeApiError(this.getNode(), error as JsonObject, { itemIndex });
 			}
 		};
 
@@ -230,6 +232,7 @@ export class Smtping implements INodeType {
 
 		// Bulk submit from all items runs once for the whole input.
 		if (resource === 'bulk' && operation === 'submit') {
+			const allItems = items.map((_, index) => ({ item: index }));
 			const source = this.getNodeParameter('source', 0) as string;
 			let emails: string[] = [];
 			if (source === 'items') {
@@ -248,7 +251,7 @@ export class Smtping implements INodeType {
 			if (!jobId) throw new NodeOperationError(this.getNode(), 'The API did not return a job ID.');
 
 			if (!(this.getNodeParameter('wait', 0) as boolean)) {
-				return [[{ json: { jobId, status: job.status ?? 'Queued', totalEmails: emails.length } }]];
+				return [[{ json: { jobId, status: job.status ?? 'Queued', totalEmails: emails.length }, pairedItem: allItems }]];
 			}
 
 			const deadline = Date.now() + (this.getNodeParameter('maxWait', 0) as number) * 60000;
@@ -262,14 +265,14 @@ export class Smtping implements INodeType {
 				} catch (e) {
 					const code = Number((e as any)?.httpCode ?? 0);
 					if (code === 409 || code === 429 || code >= 500 || code === 0) continue;
-					throw e;
+					throw new NodeApiError(this.getNode(), e as JsonObject);
 				}
 				if (st.status === 'Succeeded') return [await fetchResults(jobId, 0)];
 				if (st.status === 'Failed' || st.status === 'Cancelled') {
 					throw new NodeOperationError(this.getNode(), `Job ${jobId} ${String(st.status).toLowerCase()}${st.errorMessage ? ': ' + st.errorMessage : ''}`);
 				}
 			}
-			return [[{ json: { jobId, status: 'Processing', timedOut: true, totalEmails: emails.length } }]];
+			return [[{ json: { jobId, status: 'Processing', timedOut: true, totalEmails: emails.length }, pairedItem: allItems }]];
 		}
 
 		for (let i = 0; i < items.length; i++) {
@@ -300,7 +303,7 @@ export class Smtping implements INodeType {
 					out.push({ json: { error: (error as Error).message }, pairedItem: { item: i } });
 					continue;
 				}
-				throw error;
+				throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 			}
 		}
 		return [out];

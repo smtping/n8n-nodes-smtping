@@ -1,5 +1,6 @@
 import type {
 	IAuthenticateGeneric,
+	Icon,
 	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
@@ -11,6 +12,8 @@ export class SmtpingApi implements ICredentialType {
 	displayName = 'SMTPing API';
 
 	documentationUrl = 'https://smtping.com/docs';
+
+	icon: Icon = { light: 'file:smtping.svg', dark: 'file:smtping.dark.svg' };
 
 	properties: INodeProperties[] = [
 		{
