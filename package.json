@@ -1,0 +1,54 @@
+{
+  "name": "n8n-nodes-smtping",
+  "version": "0.1.0",
+  "description": "n8n community node for SMTPing: verify email addresses, run bulk list jobs, and check spamtrap, disposable, spambot and complainer lists.",
+  "keywords": [
+    "n8n-community-node-package",
+    "smtping",
+    "email verification",
+    "email validation",
+    "disposable email",
+    "spamtrap"
+  ],
+  "license": "MIT",
+  "homepage": "https://smtping.com/docs",
+  "author": {
+    "name": "SMTPing",
+    "url": "https://smtping.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smtping/n8n-nodes-smtping.git"
+  },
+  "engines": {
+    "node": ">=18.10"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && node scripts/copy-icons.js",
+    "dev": "tsc --watch",
+    "lint": "eslint nodes credentials package.json",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/SmtpingApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Smtping/Smtping.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.1",
+    "n8n-workflow": "^1.48.0",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

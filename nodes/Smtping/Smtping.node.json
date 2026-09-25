@@ -1,0 +1,10 @@
+{
+  "node": "n8n-nodes-smtping.smtping",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["Marketing", "Data & Storage"],
+  "resources": {
+    "credentialDocumentation": [{ "url": "https://smtping.com/docs" }],
+    "primaryDocumentation": [{ "url": "https://smtping.com/docs" }]
+  }
+}
