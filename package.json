@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-smtping",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "n8n community node for SMTPing: verify email addresses, run bulk list jobs, and check spamtrap, disposable, spambot and complainer lists.",
   "keywords": [
     "n8n-community-node-package",
