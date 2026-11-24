@@ -11,7 +11,8 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError, sleep } from 'n8n-workflow';
 
 const SAFE = ['valid', 'alias'];
-const AVOID = ['invalid', 'spamtrap', 'disposable', 'blacklisted', 'complainer', 'spambot', 'inbox_full'];
+const AVOID = ['invalid', 'spamtrap', 'disposable', 'blacklisted', 'complainer', 'spambot', 'inbox_full', 'no_reply'];
+const BANDS = ['safe', 'avoid', 'judgement'];
 
 function band(status: string): string {
 	if (SAFE.includes(status)) return 'safe';
@@ -220,7 +221,8 @@ export class Smtping implements INodeType {
 
 		const withBand = (row: IDataObject, i: number): IDataObject => {
 			const opts = this.getNodeParameter('options', i, {}) as IDataObject;
-			if (opts.addBand !== false && typeof row.status === 'string') row.band = band(row.status);
+			// The API decides the band; it is derived from the status only when a response has none.
+			if (opts.addBand !== false && typeof row.status === 'string' && !BANDS.includes(String(row.band))) row.band = band(row.status);
 			return row;
 		};
 
