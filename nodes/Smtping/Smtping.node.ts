@@ -209,7 +209,7 @@ export class Smtping implements INodeType {
 				url: baseUrl + path,
 				json: true,
 				timeout: 60000,
-				headers: { Accept: 'application/json', 'User-Agent': 'n8n-nodes-smtping/0.1.2' },
+				headers: { Accept: 'application/json', 'User-Agent': 'n8n-nodes-smtping/0.1.4' },
 			};
 			if (body) options.body = body;
 			try {
